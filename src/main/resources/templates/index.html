@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Risk Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c5364;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+            outline: none;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: #2c5364;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2c5364, #203a43);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: opacity 0.3s;
+        }
+
+        .btn:hover { opacity: 0.9; }
+
+        .disclaimer {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            margin-top: 15px;
+        }
+        .bmi-calc { grid-column: span 2; }
+
+.bmi-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.bmi-inputs input {
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.bmi-inputs input:focus { border-color: #2c5364; }
+
+.bmi-result {
+    margin-top: 8px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: none;
+}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🏥 Health Risk Predictor</h1>
+        <p>Enter your health parameters to assess potential health risks</p>
+    </div>
+
+    <form th:action="@{/predict}" th:object="${healthInput}" method="post">
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Age (years)</label>
+                <input type="number" th:field="*{age}"
+                       placeholder="e.g. 35" min="1" max="120" required/>
+            </div>
+
+            <div class="form-group">
+    <label>BMI</label>
+    <input type="number" th:field="*{bmi}" id="bmi"
+           placeholder="e.g. 24.5" step="0.1" min="10" max="60" required/>
+    <span class="hint">Weight(kg) / Height(m)²</span>
+</div>
+
+<!-- BMI Calculator -->
+<div class="form-group bmi-calc">
+    <label>BMI Calculator</label>
+    <div class="bmi-inputs">
+        <input type="number" id="weight" placeholder="Weight (kg)"
+               min="1" max="300" oninput="calculateBMI()"/>
+        <input type="number" id="height" placeholder="Height (cm)"
+               min="1" max="250" oninput="calculateBMI()"/>
+    </div>
+    <div id="bmiResult" class="bmi-result"></div>
+</div>
+
+            <div class="form-group">
+                <label>Blood Pressure (mmHg)</label>
+                <input type="number" th:field="*{bloodPressure}"
+                       placeholder="e.g. 120" min="60" max="220" required/>
+                <span class="hint">Systolic pressure</span>
+            </div>
+
+            <div class="form-group">
+                <label>Glucose Level (mg/dL)</label>
+                <input type="number" th:field="*{glucose}"
+                       placeholder="e.g. 95" min="50" max="400" required/>
+                <span class="hint">Fasting blood sugar</span>
+            </div>
+
+            <div class="form-group">
+                <label>Cholesterol (mg/dL)</label>
+                <input type="number" th:field="*{cholesterol}"
+                       placeholder="e.g. 180" min="100" max="400" required/>
+            </div>
+
+            <div class="form-group">
+                <label>Smoking</label>
+                <select th:field="*{smoking}">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Family History of Disease</label>
+                <select th:field="*{familyHistory}">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+            </div>
+
+        </div>
+
+        <button type="submit" class="btn">
+            Analyze Health Risks →
+        </button>
+    </form>
+
+    <p class="disclaimer">
+        ⚠️ This tool is for educational purposes only. 
+        Always consult a qualified medical professional.
+    </p>
+</div>
+  
+  
+  
+  
+  
+  
+  
+  <script>
+function calculateBMI() {
+    const weight = parseFloat(document.getElementById('weight').value);
+    const heightCm = parseFloat(document.getElementById('height').value);
+
+    if (weight && heightCm && weight > 0 && heightCm > 0) {
+        const heightM = heightCm / 100;
+        const bmi = (weight / (heightM * heightM)).toFixed(1);
+
+        // Auto fill BMI field
+        document.getElementById('bmi').value = bmi;
+
+        // Show result with category
+        const resultDiv = document.getElementById('bmiResult');
+        resultDiv.style.display = 'block';
+
+        let category = '';
+        let color = '';
+
+        if (bmi < 18.5) {
+            category = '⚠️ Underweight';
+            color = '#f39c12';
+        } else if (bmi < 25) {
+            category = '✅ Normal weight';
+            color = '#27ae60';
+        } else if (bmi < 30) {
+            category = '⚠️ Overweight';
+            color = '#f39c12';
+        } else {
+            category = '🔴 Obese';
+            color = '#e74c3c';
+        }
+
+        resultDiv.style.background = color + '20';
+        resultDiv.style.border = '1px solid ' + color;
+        resultDiv.style.color = color;
+        resultDiv.innerHTML = 'BMI: ' + bmi + ' — ' + category;
+    }
+}
+</script>
+  
+  
+  
+  
+  
+  
+</body>
+</html>
