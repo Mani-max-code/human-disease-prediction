@@ -4,6 +4,8 @@ public class HealthInput {
     private double age;
     private double bmi;
     private double bloodPressure;
+    private double systolicBP;
+    private double diastolicBP;
     private double glucose;
     private double cholesterol;
     private double smoking;      // 1 = yes, 0 = no
@@ -16,9 +18,11 @@ public class HealthInput {
     public double getBmi() { return bmi; }
     public void setBmi(double bmi) { this.bmi = bmi; }
 
-    public double getBloodPressure() { return bloodPressure; }
-    public void setBloodPressure(double bloodPressure) { this.bloodPressure = bloodPressure; }
+    public double getSystolicBP() { return systolicBP; }
+    public void setSystolicBP(double systolicBP) { this.systolicBP = systolicBP; }
 
+    public double getDiastolicBP() { return diastolicBP; }
+    public void setDiastolicBP(double diastolicBP) { this.diastolicBP = diastolicBP; }
     public double getGlucose() { return glucose; }
     public void setGlucose(double glucose) { this.glucose = glucose; }
 

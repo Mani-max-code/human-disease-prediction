@@ -11,6 +11,106 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.util.ModelSerializer;
+import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler;
+import org.nd4j.linalg.learning.config.Adam;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
+import org.springframework.core.io.ClassPathResource;
+
+import java.io.File;
+
+public class ModelTrainer {
+
+    public static void main(String[] args) throws Exception {
+        System.out.println("Starting training of 3 models...");
+
+        trainModel("Diabetes",     "data/diabetes_data.csv",     8, 20);
+        trainModel("Hypertension", "data/hypertension_data.csv", 8, 20);
+        trainModel("Heart",        "data/heart_data.csv",        8, 20);
+
+        System.out.println("All 3 models trained and saved!");
+    }
+
+    private static void trainModel(
+            String name,
+            String csvPath,
+            int labelIndex,
+            int batchSize) throws Exception {
+
+        System.out.println("Training " + name + " model...");
+
+        RecordReader recordReader = new CSVRecordReader(1);
+        File csvFile = new ClassPathResource(csvPath).getFile();
+        recordReader.initialize(new FileSplit(csvFile));
+
+        DataSetIterator iterator = new RecordReaderDataSetIterator(
+                recordReader, batchSize, labelIndex, 2);
+
+        NormalizerMinMaxScaler normalizer = new NormalizerMinMaxScaler();
+        normalizer.fit(iterator);
+        iterator.setPreProcessor(normalizer);
+
+        MultiLayerConfiguration config =
+                new NeuralNetConfiguration.Builder()
+                .seed(123)
+                .weightInit(WeightInit.XAVIER)
+                .updater(new Adam(0.001))
+                .list()
+                .layer(new DenseLayer.Builder()
+                        .nIn(8)
+                        .nOut(16)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder()
+                        .nIn(16)
+                        .nOut(8)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new OutputLayer.Builder()
+                        .nIn(8)
+                        .nOut(2)
+                        .activation(Activation.SOFTMAX)
+                        .lossFunction(LossFunctions.LossFunction.MCXENT)
+                        .build())
+                .build();
+
+        MultiLayerNetwork model = new MultiLayerNetwork(config);
+        model.init();
+        model.setListeners(new ScoreIterationListener(50));
+
+        for (int epoch = 0; epoch < 200; epoch++) {
+            iterator.reset();
+            model.fit(iterator);
+            if (epoch % 50 == 0) {
+                System.out.println("  Epoch " + epoch + " complete");
+            }
+        }
+
+        File modelFile = new File(
+                "src/main/resources/models/" + name + "_model.zip");
+        modelFile.getParentFile().mkdirs();
+        ModelSerializer.writeModel(model, modelFile, true);
+
+        System.out.println(name + " model saved!");
+    }
+}
+
+
+
+/*
+import org.datavec.api.records.reader.RecordReader;
+import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
+import org.datavec.api.split.FileSplit;
+import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
+import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
+import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
+import org.deeplearning4j.nn.conf.layers.DenseLayer;
+import org.deeplearning4j.nn.conf.layers.OutputLayer;
+import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.preprocessor.NormalizerMinMaxScaler;
@@ -99,4 +199,4 @@ public class ModelTrainer {
 
         System.out.println("✅ Model trained and saved successfully!");
     }
-}
+}     */

@@ -127,6 +127,22 @@
     font-weight: 600;
     display: none;
 }
+.bp-emergency {
+    grid-column: span 2;
+    background: #fdecea;
+    border: 2px solid #e74c3c;
+    border-radius: 10px;
+    padding: 15px;
+    color: #c0392b;
+    font-size: 14px;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { border-color: #e74c3c; }
+    50% { border-color: #ff0000; }
+    100% { border-color: #e74c3c; }
+}
     </style>
 </head>
 <body>
@@ -165,11 +181,28 @@
 </div>
 
             <div class="form-group">
-                <label>Blood Pressure (mmHg)</label>
-                <input type="number" th:field="*{bloodPressure}"
-                       placeholder="e.g. 120" min="60" max="220" required/>
-                <span class="hint">Systolic pressure</span>
-            </div>
+    <label>Systolic BP (mmHg)</label>
+    <input type="number" th:field="*{systolicBP}"
+           id="systolicBP"
+           placeholder="e.g. 120" min="60" max="250"
+           oninput="checkBPCrisis()" required/>
+    <span class="hint">Top number e.g. 120</span>
+</div>
+
+<div class="form-group">
+    <label>Diastolic BP (mmHg)</label>
+    <input type="number" th:field="*{diastolicBP}"
+           id="diastolicBP"
+           placeholder="e.g. 80" min="40" max="150"
+           oninput="checkBPCrisis()" required/>
+    <span class="hint">Bottom number e.g. 80</span>
+</div>
+
+<div id="bpAlert" class="bp-emergency" style="display:none;">
+    🚨 <strong>HYPERTENSIVE CRISIS DETECTED!</strong><br>
+    Systolic ≥ 180 or Diastolic ≥ 120 is a medical emergency.<br>
+    <strong>Please seek emergency medical care immediately!</strong>
+</div>
 
             <div class="form-group">
                 <label>Glucose Level (mg/dL)</label>
@@ -220,6 +253,16 @@
   
   
   <script>
+  function checkBPCrisis() {
+	    const systolic = parseFloat(document.getElementById('systolicBP').value);
+	    const diastolic = parseFloat(document.getElementById('diastolicBP').value);
+	    const alert = document.getElementById('bpAlert');
+	    if (systolic >= 180 || diastolic >= 120) {
+	        alert.style.display = 'block';
+	    } else {
+	        alert.style.display = 'none';
+	    }
+	}
 function calculateBMI() {
     const weight = parseFloat(document.getElementById('weight').value);
     const heightCm = parseFloat(document.getElementById('height').value);
